@@ -7,9 +7,9 @@ declare module 'react-plotly.js' {
     layout?: Partial<Layout>
     config?: Partial<Config>
     style?: React.CSSProperties
-    onClick?: (event: any) => void
-    onHover?: (event: any) => void
-    onUnhover?: (event: any) => void
+    onClick?: (event: unknown) => void
+    onHover?: (event: unknown) => void
+    onUnhover?: (event: unknown) => void
     [key: string]: unknown
   }
 

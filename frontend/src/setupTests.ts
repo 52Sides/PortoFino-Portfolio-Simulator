@@ -1,9 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { vi } from 'vitest';
 
-// @ts-expect-error
+// @ts-expect-error TS does not know that 'g' exists on globalThis
 (globalThis as any).g = globalThis;
-
 
 // --- Fix Plotly.js canvas + Blob issues in JSDOM ---
 Object.defineProperty(global.HTMLCanvasElement.prototype, 'getContext', {
@@ -37,11 +36,7 @@ Object.defineProperty(global.HTMLCanvasElement.prototype, 'getContext', {
 
 global.URL.createObjectURL = vi.fn();
 
-// @ts-ignore
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-expect-error
+// @ts-expect-error Overriding Blob for JSDOM compatibility
 global.Blob = class extends (global as any).Blob {};
 
-
-
-import '@testing-library/jest-dom'
+import '@testing-library/jest-dom';

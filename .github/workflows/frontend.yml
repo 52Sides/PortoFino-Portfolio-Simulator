@@ -38,8 +38,14 @@ jobs:
       - name: Lint frontend
         run: npm run lint || echo "Lint warnings ignored"
 
-      - name: Run tests
-        run: npm run test -- --run
+      - name: Run unit tests
+        run: npm run test -- tests/unit
+
+      - name: Run integration tests
+        run: npm run test -- tests/integration
+
+      - name: Run e2e tests
+        run: npm run test:e2e
 
       - name: Create env file for build
         run: echo "VITE_API_URL=http://localhost:8000" > .env

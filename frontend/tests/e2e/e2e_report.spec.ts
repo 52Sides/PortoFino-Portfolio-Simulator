@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 import fs from 'fs'
 
-test('download XLSX report', async ({ page, context }) => {
+test('download XLSX report', async ({ page, context: _context }) => {
   // Main page
   await page.goto('http://localhost:5173/')
 
