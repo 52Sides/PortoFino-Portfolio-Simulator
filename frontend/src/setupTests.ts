@@ -1,9 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable no-var */
 import { vi } from 'vitest';
 
-// @ts-ignore
-const g: any = globalThis;
+// @ts-expect-error
+(globalThis as any).g = globalThis;
 
 
 // --- Fix Plotly.js canvas + Blob issues in JSDOM ---
@@ -40,7 +39,7 @@ global.URL.createObjectURL = vi.fn();
 
 // @ts-ignore
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
+// @ts-expect-error
 global.Blob = class extends (global as any).Blob {};
 
 

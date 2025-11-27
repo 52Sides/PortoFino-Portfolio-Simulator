@@ -29,7 +29,7 @@ api.interceptors.response.use(
         useAuthStore.getState().setTokens(access_token, refresh_token)
         originalRequest.headers.Authorization = `Bearer ${access_token}`
         return api(originalRequest)
-      } catch (e) {
+      } catch (_) {
         useAuthStore.getState().clear()
         window.location.href = '/'
       }

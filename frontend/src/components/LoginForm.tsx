@@ -48,8 +48,12 @@ export default function LoginForm({ onClose }: { onClose: () => void }) {
       const { access_token, refresh_token } = resp.data
       setTokens(access_token, refresh_token)
       onClose()
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Login failed. Check your credentials.')
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message)
+      } else {
+        setError('Login failed. Check your credentials.')
+      }
     } finally {
       setLoading(false)
     }

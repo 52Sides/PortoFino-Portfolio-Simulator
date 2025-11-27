@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import api from '../api/client'
+import api, { AxiosError } from '../api/client'
 
 interface AuthState {
   accessToken: string | null
@@ -38,9 +38,17 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({ accessToken: access_token, refreshToken: refresh_token })
       localStorage.setItem('access_token', access_token)
       localStorage.setItem('refresh_token', refresh_token)
-    } catch (err: any) {
-      console.error('Login failed', err.response?.data)
-      throw err
+    } catch (err: unknown) {
+      if (err instanceof AxiosError) {
+        console.error('Login failed', err.response?.data)
+        throw err
+      } else if (err instanceof Error) {
+        console.error('Login failed', err.message)
+        throw err
+      } else {
+        console.error('Login failed', err)
+        throw err
+      }
     }
   },
 }))

@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import { subscribeToSimulationWS } from "@/api/events";
 import type { SimulationEvent } from "@/api/events";
+import type { AxiosError } from "axios";
 import Plot from "react-plotly.js";
 import api from "./api/client";
 import MetricCard from "./components/MetricCard";
+
 
 function App() {
   const [command, setCommand] = useState<string>("");
@@ -61,8 +63,14 @@ function App() {
     try {
       const resp = await api.post("/simulate/", { command });
       setTaskId(resp.data.task_id);
-    } catch (err: any) {
-      setErrorMessage(err.response?.data?.detail || err.message || "Simulation failed");
+    } catch (err: unknown) {
+      if (err instanceof AxiosError) {
+        setErrorMessage(err.response?.data?.detail || err.message || "Simulation failed");
+      } else if (err instanceof Error) {
+        setErrorMessage(err.message);
+      } else {
+        setErrorMessage("Simulation failed");
+      }
       setLoading(false);
       taskStatusRef.current = null;
     }

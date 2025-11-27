@@ -44,8 +44,12 @@ export default function SignUpForm({ onClose }: { onClose: () => void }) {
         onClose()
         navigate('/')
       }
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Signup failed. Try again.')
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message)
+      } else {
+        setError('Signup failed. Try again.')
+      }
     } finally {
       setLoading(false)
     }

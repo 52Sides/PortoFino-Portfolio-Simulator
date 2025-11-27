@@ -17,7 +17,7 @@ export default function OAuthCallback() {
     } else {
       navigate("/login", { replace: true });
     }
-  }, []);
+  }, [navigate, setTokens]);
 
   return (
     <div className="flex flex-col items-center justify-center mt-10">
