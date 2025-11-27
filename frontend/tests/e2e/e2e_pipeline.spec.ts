@@ -1,17 +1,18 @@
 import { test, expect } from '@playwright/test';
-import { closeModalIfExists } from '../utils/closeModal';
 
 test('login → simulate → history → report pipeline', async ({ page }) => {
-  await page.goto("http://localhost:5173", { timeout: 30000 });
+  await page.goto("http://localhost:5173/", { timeout: 30000 });
 
   // Login
   await page.click("text=Log in");
+  await expect(page.getByText('Cancel')).toBeVisible();
+
   await page.getByPlaceholder("Email").fill("user@test.com");
   await page.getByPlaceholder("Password").fill("pass123");
-  await page.click("text=Login");
+  await page.locator('form button[type="Login"]').click()
 
   // Должно закрыться автоматически
-  await expect(page.getByText('Logout')).toBeVisible();
+  await expect(page.getByText('Logout')).toBeVisible({ timeout: 3000 });
 
   // Simulate
   await page.fill("textarea", "AAPL-L-100% 2020-01-01 2020-12-31");
