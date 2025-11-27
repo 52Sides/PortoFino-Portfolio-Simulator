@@ -9,12 +9,13 @@ on:
 jobs:
   docker_compose_tests:
     runs-on: ubuntu-latest
+
     steps:
-      # --- Checkout ---
+      # ---------------- Checkout ----------------
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # --- Create CI secrets env ---
+      # ---------------- Create .env_secret ----------------
       - name: Create .env_secret for CI
         run: |
           cat <<EOF > .env_secret
@@ -27,19 +28,17 @@ jobs:
           SESSION_SECRET=${{ secrets.SESSION_SECRET }}
           EOF
 
-      # --- Docker build setup ---
+      # ---------------- Docker Buildx ----------------
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # --- Build all services without cache ---
       - name: Build all services
         run: docker compose build --no-cache
 
-      # --- Start infrastructure containers ---
+      # ---------------- Start infra ----------------
       - name: Start infrastructure
         run: docker compose up -d postgres redis zookeeper kafka prometheus
 
-      # --- Wait for healthy infrastructure ---
       - name: Wait for healthy state
         run: |
           for i in {1..25}; do
@@ -53,11 +52,11 @@ jobs:
             sleep 15
           done
 
-      # --- Start main services ---
+      # ---------------- Start app services ----------------
       - name: Start backend, worker, frontend, grafana
         run: docker compose up -d backend worker frontend grafana
 
-      # --- Wait for backend readiness ---
+      # ---------------- Wait backend ----------------
       - name: Wait for backend
         run: |
           for i in {1..20}; do
@@ -69,7 +68,7 @@ jobs:
             sleep 5
           done
 
-      # --- Wait for frontend readiness ---
+      # ---------------- Wait frontend ----------------
       - name: Wait for frontend
         run: |
           for i in {1..20}; do
@@ -81,52 +80,30 @@ jobs:
             sleep 5
           done
 
-      # --- Optional: wait for Prometheus, Grafana, Redis Exporter ---
-      - name: Wait for Prometheus
-        run: |
-          for i in {1..20}; do
-            if curl -s http://localhost:9090/-/healthy > /dev/null; then
-              echo "Prometheus is up"
-              break
-            fi
-            echo "Waiting for Prometheus"
-            sleep 5
-          done
-
-      - name: Wait for Grafana
-        run: |
-          for i in {1..20}; do
-            if curl -s http://localhost:3000/login > /dev/null; then
-              echo "Grafana is up"
-              break
-            fi
-            echo "Waiting for Grafana"
-            sleep 5
-          done
-
-      - name: Wait for Redis Exporter
-        run: |
-          for i in {1..20}; do
-            if curl -s http://localhost:9121/metrics > /dev/null; then
-              echo "Redis exporter is up"
-              break
-            fi
-            echo "Waiting for Redis exporter"
-            sleep 5
-          done
-
-      # --- Run backend tests ---
+      # ---------------- Backend tests ----------------
       - name: Run backend tests
-        run: |
-          docker compose exec backend pytest --disable-warnings --cov=src --cov-report=term-missing
+        run: docker compose exec backend pytest --disable-warnings --cov=src --cov-report=term-missing
 
-      # --- Run frontend e2e tests ---
+      # ---------------- Install Node + Playwright locally ----------------
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Playwright + deps
+        run: |
+          npm ci
+          npx playwright install --with-deps
+        working-directory: frontend
+
+      # ---------------- Run E2E tests on runner ----------------
       - name: Run Playwright E2E tests
-        run: |
-          docker compose exec frontend npx playwright install --with-deps
-          docker compose exec frontend npm run test:e2e
+        run: npx playwright test --reporter=line
+        working-directory: frontend
 
-      # --- Upload Playwright report ---
+      # ---------------- Upload report ----------------
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v4
@@ -134,12 +111,12 @@ jobs:
           name: playwright-report
           path: frontend/playwright-report/
 
-      # --- Diagnostics on failure ---
+      # ---------------- Diagnostics ----------------
       - name: Show docker logs on failure
         if: failure()
         run: docker compose logs backend worker kafka frontend prometheus grafana
 
-      # --- Tear down ---
+      # ---------------- Tear down ----------------
       - name: Tear down environment
         if: always()
         run: docker compose down --remove-orphans -v
