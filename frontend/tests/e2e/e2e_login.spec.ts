@@ -9,7 +9,7 @@ test('user can sign up, log in, see Logout, then log out', async ({ page }) => {
 
   await page.getByPlaceholder("Email").fill("user@test.com");
   await page.getByPlaceholder("Password").fill("pass123");
-  await page.locator('form button[type="Sign up"]').click()
+  await page.getByTestId('signup-submit').click()
 
   // Модалка должна исчезнуть сама (если новый пользователь)
   await expect(page.getByText('Logout')).toBeVisible({ timeout: 3000 });

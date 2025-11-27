@@ -9,7 +9,7 @@ test('login → simulate → history → report pipeline', async ({ page }) => {
 
   await page.getByPlaceholder("Email").fill("user@test.com");
   await page.getByPlaceholder("Password").fill("pass123");
-  await page.locator('form button[type="Login"]').click()
+  await page.getByTestId('login-submit').click()
 
   // Должно закрыться автоматически
   await expect(page.getByText('Logout')).toBeVisible({ timeout: 3000 });
