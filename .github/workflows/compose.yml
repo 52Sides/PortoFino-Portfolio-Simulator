@@ -115,10 +115,10 @@ jobs:
             sleep 5
           done
 
-      # --- Run backend integration tests ---
-      - name: Run backend integration tests
+      # --- Run backend tests ---
+      - name: Run backend tests
         run: |
-          docker compose exec backend pytest -v -m "integration or e2e" --disable-warnings --cov=src --cov-report=term-missing
+          docker compose exec backend pytest --disable-warnings --cov=src --cov-report=term-missing
 
       # --- Run frontend e2e tests ---
       - name: Run Playwright E2E tests

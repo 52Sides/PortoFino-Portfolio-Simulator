@@ -54,6 +54,7 @@ def test_cleanup_old_report_files_handles_unlink_error(tmp_path, monkeypatch):
 
     def fail_unlink(self):
         raise RuntimeError("cannot delete")
+
     monkeypatch.setattr(type(bad_file), "unlink", fail_unlink)
 
     with patch("services.worker.tasks.scheduler.logger") as mock_logger:

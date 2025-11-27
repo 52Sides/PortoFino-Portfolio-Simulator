@@ -33,6 +33,7 @@ async def test_simulations_history_flow_with_report(async_client):
         json={"command": "TSLA-L-50% NVDA-L-50% 2020-01-01 2020-12-31"},
         headers=headers
     )
+    print(sim_resp.json())
     sim_task_id = sim_resp.json()["task_id"]
     assert sim_task_id
 
