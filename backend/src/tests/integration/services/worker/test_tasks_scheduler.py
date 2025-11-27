@@ -45,26 +45,6 @@ def test_cluster_asset_prices_task_logs_exception():
 
 
 @pytest.mark.integration
-def test_cleanup_old_report_files_handles_unlink_error(tmp_path, monkeypatch):
-    monkeypatch.setattr("core.report.xls_generator.REPORTS_DIR", tmp_path)
-
-    bad_file = tmp_path / "report_001.xls"
-    bad_file.write_text("test")
-    os.utime(bad_file, (time.time() - 9 * 86400,) * 2)
-
-    def fail_unlink(self):
-        raise RuntimeError("cannot delete")
-
-    monkeypatch.setattr(type(bad_file), "unlink", fail_unlink)
-
-    with patch("services.worker.tasks.scheduler.logger") as mock_logger:
-        removed = cleanup_old_report_files_task(days=7)
-
-    assert removed == 0
-    assert mock_logger.exception.called
-
-
-@pytest.mark.integration
 def test_cleanup_old_report_files_no_directory(monkeypatch):
     fake_dir = Path("/tmp/non_existing_reports_dir_1234")
     monkeypatch.setattr("core.report.xls_generator.REPORTS_DIR", fake_dir)

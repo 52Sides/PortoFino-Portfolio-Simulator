@@ -33,13 +33,16 @@ async def test_simulations_history_flow_with_report(async_client):
         json={"command": "TSLA-L-50% NVDA-L-50% 2020-01-01 2020-12-31"},
         headers=headers
     )
-    print(sim_resp.json())
     sim_task_id = sim_resp.json()["task_id"]
     assert sim_task_id
 
+    # --- Wait for simulation to complete ---
+    await asyncio.sleep(30)
+
     # --- History ---
     history_resp = await async_client.get("/history/", headers=headers)
-    sim_history_id = history_resp.json()["root"][0]["id"]
+    root = history_resp.json().get("root", [])
+    sim_history_id = root[0]["id"]
     assert sim_history_id
 
     # --- Report ---
