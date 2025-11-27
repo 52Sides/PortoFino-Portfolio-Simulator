@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "portofino-portfolio-simulator"
-version = "3.0"
+version = "1.0"
 description = "PortoFino Portfolio Simulator"
 authors = [{ name = "52Sides", email = "everybody.knows.1152@gmail.com" }]
 requires-python = ">=3.11"
