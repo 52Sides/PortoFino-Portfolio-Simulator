@@ -1,23 +1,23 @@
 import { Page } from '@playwright/test';
 
 export async function closeModalIfExists(page: Page) {
-  const modalOverlay = page.locator('div.fixed.inset-0');
+  // Любая модалка
+  const overlay = page.locator('div.fixed.inset-0');
+  if (!(await overlay.isVisible().catch(() => false))) return;
 
-  if (!(await modalOverlay.isVisible().catch(() => false))) {
+  // Кнопка Cancel (обычно ошибка при Sign up)
+  const cancel = page.getByText('Cancel', { exact: true });
+  if (await cancel.isVisible().catch(() => false)) {
+    await cancel.click();
+    await page.waitForTimeout(150);
     return;
   }
 
-  const cancelBtn = page.getByText('Cancel', { exact: true });
-  if (await cancelBtn.isVisible().catch(() => false)) {
-    await cancelBtn.click();
-    await page.waitForTimeout(200);
-    return;
-  }
-
-  const closeIcon = page.locator('.modal-close, [data-test="close-modal"]');
-  if (await closeIcon.isVisible().catch(() => false)) {
-    await closeIcon.click();
-    await page.waitForTimeout(200);
+  // Кнопка Close (History → View)
+  const close = page.getByText('Close', { exact: true });
+  if (await close.isVisible().catch(() => false)) {
+    await close.click();
+    await page.waitForTimeout(150);
     return;
   }
 }
