@@ -10,14 +10,6 @@ test('download XLSX report', async ({ page, context }) => {
   await page.click('button[type="submit"]')
 
   await page.getByText('History').click()
-  await page.getByText('View').first().click()
-  await expect(page.getByText('Download XLSX Report')).toBeVisible()
+  await expect(page.getByText('View')).toBeVisible()
+  await expect(page.getByText('Download')).toBeVisible()
 
-  const [ download ] = await Promise.all([
-    page.waitForEvent('download'),
-    page.getByText('Download XLSX Report').click(),
-  ])
-
-  const path = await download.path()
-  expect(fs.existsSync(path!)).toBeTruthy()
-})

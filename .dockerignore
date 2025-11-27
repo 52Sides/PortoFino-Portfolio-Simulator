@@ -3,12 +3,12 @@ __pycache__/
 *.pyo
 *.db
 .env
+.env_secret
 .idea
 .venv
 venv/
 .git
 .gitignore
-backend/src/tests/
 frontend/node_modules
 frontend/dist
-tests
+**/tests/

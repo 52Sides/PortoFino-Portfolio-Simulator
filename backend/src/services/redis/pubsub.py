@@ -1,37 +1,31 @@
 import json
 import redis.asyncio as redis
 
+from core.config import settings
+
 
 class AsyncRedisPubSub:
-    """Асинхронная обёртка для Redis Pub/Sub — используется для уведомлений симуляции."""
+    """Async wrapper for Redis Pub/Sub with a shared connection pool."""
 
-    def __init__(self, url: str, channel: str):
-        self.url = url
+    _shared_client: redis.Redis | None = None
+
+    def __init__(self, channel: str):
         self.channel = channel
-        self._redis = None
         self._pubsub = None
 
-    async def connect(self):
-        """Создаёт подключение к Redis (один клиент на весь экземпляр)."""
-        if self._redis is None:
-            self._redis = redis.from_url(self.url, decode_responses=True)
+    @classmethod
+    async def init_shared(cls):
+        """Creates a single Redis client (pool) bound to the current loop."""
+        if cls._shared_client is None:
+            cls._shared_client = redis.from_url(settings.REDIS_URL, decode_responses=True, max_connections=5)
 
     async def publish(self, message: dict):
-        """Публикует сообщение в канал."""
-        if not self._redis:
-            await self.connect()
-        await self._redis.publish(self.channel, json.dumps(message))
+        await self.init_shared()
+        await self._shared_client.publish(self.channel, json.dumps(message))
 
     async def subscribe(self):
-        """
-        Асинхронный генератор событий.
-        Пример использования:
-            async for event in pubsub.subscribe():
-                ...
-        """
-        if not self._redis:
-            await self.connect()
-        self._pubsub = self._redis.pubsub()
+        await self.init_shared()
+        self._pubsub = self._shared_client.pubsub()
         await self._pubsub.subscribe(self.channel)
 
         async for msg in self._pubsub.listen():
@@ -43,9 +37,13 @@ class AsyncRedisPubSub:
 
     async def close(self):
         if self._pubsub:
-            await self._pubsub.unsubscribe(self.channel)
-            await self._pubsub.close()
-            self._pubsub = None
-        if self._redis:
-            await self._redis.close()
-            self._redis = None
+            try:
+                await self._pubsub.unsubscribe(self.channel)
+                await self._pubsub.close()
+            finally:
+                self._pubsub = None
+
+
+def get_pubsub(channel_prefix: str, task_id: str) -> AsyncRedisPubSub:
+    """Get a Pub/Sub client for a task_id."""
+    return AsyncRedisPubSub(f"{channel_prefix}:{task_id}")

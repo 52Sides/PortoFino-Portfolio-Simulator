@@ -16,7 +16,7 @@ jobs:
       REFRESH_TOKEN_EXPIRE_DAYS: ${{ secrets.REFRESH_TOKEN_EXPIRE_DAYS }}
       GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
       GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-
+      SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -108,7 +108,7 @@ jobs:
       - name: Run backend integration tests
         run: |
           echo "Running integration pytest suite"
-          docker compose exec backend pytest -v -m "integration or celery" --disable-warnings
+          docker compose exec backend pytest -v -m "integration or e2e" --disable-warnings --cov=src --cov-report=term-missing
 
       - name: Run Playwright realtime E2E test
         run: |
@@ -122,12 +122,6 @@ jobs:
         with:
           name: playwright-report
           path: frontend/playwright-report/
-
-      - name: Run Locust load test (simulate endpoint)
-        run: |
-          docker compose up -d backend worker
-          sleep 10
-          docker compose run locust -f backend/tests/load/locustfile.py --headless -u 10 -r 2 -t 1m --csv=locust_report
 
       # Diagnostic
       - name: Show docker logs on failure

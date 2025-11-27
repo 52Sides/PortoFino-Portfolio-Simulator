@@ -1,106 +1,61 @@
-import asyncio
 import json
 import logging
+import asyncio
 
 from aiokafka import AIOKafkaConsumer
 
 from core.config import settings
-from db.database import AsyncSessionLocal
-from db.models.metric_model import MetricModel
-from services.worker.tasks import run_simulation_task
-from services.redis.pubsub import AsyncRedisPubSub
+from services.worker.tasks.simulation import run_simulation
+from services.worker.tasks.report import run_report
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
+
+WORKERS_QUEUE = "workers_queue"
 
 
-async def consume_simulation_requests():
+async def consume_events():
+    """Consume Kafka events and dispatch simulation or report tasks based on topic and stage."""
+
     consumer = AIOKafkaConsumer(
         settings.KAFKA_SIMULATION_TOPIC,
+        settings.KAFKA_REPORT_TOPIC,
         bootstrap_servers=settings.KAFKA_BROKER,
-        group_id="simulation-consumers",
+        group_id="unified-consumers",
         enable_auto_commit=True,
         auto_offset_reset="earliest",
+        value_deserializer=lambda v: json.loads(v.decode("utf-8")),
     )
 
-    await consumer.start()
-    print(f"[Kafka] Listening on topic: {settings.KAFKA_SIMULATION_TOPIC}")
-
     try:
+        await consumer.start()
+        logger.info("[Kafka] Consumer started")
+
         async for msg in consumer:
             try:
-                data = json.loads(msg.value.decode("utf-8"))
-                command = data.get("command")
-                user_id = data.get("user_id")
-                if not command:
-                    print(f"[Kafka] Invalid message: {data}")
+                topic = msg.topic
+                event = msg.value
+
+                task_id = event.get("task_id")
+                stage = event.get("stage")
+                status = event.get("status")
+
+                if not task_id or status != "waiting":
                     continue
-                print(f"[Kafka] Received simulation request: {command} (user_id={user_id})")
-                run_simulation_task.delay(command, user_id)
-            except Exception as e:
-                print(f"[Kafka] Error processing message: {e}")
+
+                if topic == settings.KAFKA_SIMULATION_TOPIC and stage == "run_simulation":
+                    run_simulation.apply_async(args=[task_id], queue=WORKERS_QUEUE)
+
+                if topic == settings.KAFKA_REPORT_TOPIC and stage == "run_report":
+                    run_report.apply_async(args=[task_id], queue=WORKERS_QUEUE)
+
+            except Exception:
+                logger.exception("Kafka consumer event processing failed")
+
+    except asyncio.CancelledError:
+        raise
+
+    except Exception:
+        logger.exception("Kafka consumer error")
+
     finally:
         await consumer.stop()
-
-
-async def consume_metrics_events():
-    """Обновляет метрики в БД при получении событий metrics-events."""
-    consumer = AIOKafkaConsumer(
-        "metrics-events",
-        bootstrap_servers=settings.KAFKA_BROKER,
-        group_id="metrics_updater",
-        value_deserializer=lambda m: json.loads(m.decode("utf-8")),
-    )
-    await consumer.start()
-    logger.info("Started metrics-events consumer")
-
-    try:
-        async for msg in consumer:
-            data = msg.value
-            portfolio_id = data.get("portfolio_id")
-            sharpe = data.get("sharpe")
-            drawdown = data.get("drawdown")
-
-            if not portfolio_id:
-                logger.warning(f"Skipping invalid metric message: {data}")
-                continue
-
-            async with AsyncSessionLocal() as session:
-                metric = await session.get(MetricModel, portfolio_id)
-                if metric:
-                    metric.sharpe = sharpe
-                    metric.drawdown = drawdown
-                    await session.commit()
-                    logger.info(f"Updated metrics for portfolio_id={portfolio_id}")
-    except Exception as e:
-        logger.exception(f"Metrics consumer error: {e}")
-    finally:
-        await consumer.stop()
-
-
-# Kafka → Redis Bridge: пересылка событий симуляций фронтенду через WebSocket
-async def consume_simulation_events():
-    consumer = AIOKafkaConsumer(
-        "simulation_requests",
-        bootstrap_servers=settings.KAFKA_BROKER,
-        group_id="simulation_events_bridge",
-        value_deserializer=lambda m: json.loads(m.decode("utf-8")),
-    )
-    await consumer.start()
-    pubsub = AsyncRedisPubSub(settings.REDIS_URL, settings.REDIS_PUBSUB_CHANNEL)
-    await pubsub.connect()
-    logger.info("Started portfolio-events → Redis bridge")
-
-    try:
-        async for msg in consumer:
-            event = msg.value
-            event_type = event.get("type")
-            if event_type == "simulation.completed":
-                await pubsub.publish(event)
-                logger.info(f"Published event to Redis: {event}")
-    except Exception as e:
-        logger.exception(f"Bridge consumer error: {e}")
-    finally:
-        await consumer.stop()
-        await pubsub.close()
-        logger.info("Stopped portfolio-events bridge")

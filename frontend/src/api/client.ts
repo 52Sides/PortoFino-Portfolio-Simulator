@@ -5,14 +5,14 @@ const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000',
 })
 
-// Добавляем токен к каждому запросу
+// Add token to each request
 api.interceptors.request.use((config) => {
   const token = useAuthStore.getState().accessToken
   if (token) config.headers.Authorization = `Bearer ${token}`
   return config
 })
 
-// Автоматическое обновление access-токена при 401
+// Auto renew access-token with 401
 api.interceptors.response.use(
   (response) => response,
   async (error) => {

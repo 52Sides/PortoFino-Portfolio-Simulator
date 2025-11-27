@@ -1,39 +1,31 @@
-from sqlalchemy import Column, Integer, String, Date, JSON, DateTime, func, ForeignKey
+from sqlalchemy import Column, Integer, JSON, DateTime, func, ForeignKey, Float, Date, String
 from sqlalchemy.orm import relationship
+
 from db.database import Base
 
 
 class SimulationModel(Base):
-    """Результат симуляции портфеля"""
+    """Portfolio Simulation Result."""
+
     __tablename__ = "simulations"
 
     id = Column(Integer, primary_key=True)
-    command = Column(String, nullable=False)
+    command = Column(String(500), nullable=False)
+    tickers = Column(JSON, nullable=False)              # {"AAPL": 0.35}: {str: float}
+    weights = Column(JSON, nullable=False)              # {"AAPL": 0.35}: {str: float}
+    sides = Column(JSON, nullable=False)                # {"AAPL": "L"}: {str: float}
     start_date = Column(Date, nullable=False)
     end_date = Column(Date, nullable=False)
-    result_json = Column(JSON, nullable=False)
+    cagr = Column(Float, nullable=True)
+    sharpe = Column(Float, nullable=True)
+    max_drawdown = Column(Float, nullable=True)
+    portfolio_value = Column(JSON, nullable=True)      # {"2020-05-25": 115500.00}: {ISO date: float}
+    daily_returns = Column(JSON, nullable=True)        # {"2020-05-25": 1.232}: {ISO date: float}
+    cumulative_returns = Column(JSON, nullable=True)   # {"2020-05-25": 115.50000}: {ISO date: float}
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
-    user = relationship("UserModel", backref="simulations")
+    user = relationship("UserModel", back_populates="simulations")
 
-    metrics = relationship(
-        "MetricModel",
-        back_populates="simulation",
-        uselist=False,
-        cascade="all, delete-orphan",
-    )
-    assets = relationship(
-        "AssetModel",
-        secondary="asset_simulation",
-        back_populates="simulations",
-    )
-
-    report = relationship(
-        "ReportModel",
-        uselist=False,
-        back_populates="simulation"
-    )
-
-    def __repr__(self) -> str:
-        return f"<Simulation(id={self.id}, command={self.command})>"
+    def __repr__(self):
+        return f"<Simulation(id={self.id}, {self.start_date}→{self.end_date}, command={self.command}>"

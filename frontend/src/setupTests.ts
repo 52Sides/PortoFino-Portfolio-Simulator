@@ -38,7 +38,7 @@ Object.defineProperty(global.HTMLCanvasElement.prototype, 'getContext', {
 
 global.URL.createObjectURL = vi.fn();
 
-// @ts-ignore — отключаем строгую проверку типов для моков
+// @ts-ignore
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 global.Blob = class extends (global as any).Blob {};

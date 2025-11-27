@@ -1,21 +1,17 @@
-from fastapi import APIRouter, HTTPException
-from fastapi.responses import FileResponse
-from services.reports_cache import get_report_status
-from services.worker.tasks import generate_report_task
-from pathlib import Path
+from fastapi import APIRouter, Depends, HTTPException
 
-router = APIRouter(prefix="/report", tags=["Reports"])
+from api.dependencies.users import get_current_user
+from core.report.report_service import ReportService
+from db.models.user_model import UserModel
+from schemas.report import ReportRequest, ReportResponse
 
-@router.get("/{simulation_id}")
-async def get_report(simulation_id: int):
-    """Если отчёт уже готов — возвращаем файл, иначе запускаем задачу."""
-    status = await get_report_status(simulation_id)
-    if status and status.get("status") == "ready":
-        path = Path(status["path"])
-        if not path.exists():
-            raise HTTPException(404, "Report file missing")
-        return FileResponse(path, filename=f"report_{simulation_id}.xlsx")
+router = APIRouter(prefix="/report", tags=["Report"])
 
-    # если отчёта нет — создаём задачу Celery
-    generate_report_task.delay(simulation_id)
-    return {"status": "queued"}
+
+@router.post("/", response_model=ReportResponse)
+async def create_report(request: ReportRequest, user: UserModel = Depends(get_current_user)):
+    """Creates a report task and submits it for processing"""
+    try:
+        return await ReportService.create_report(request.simulation_id, user.id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))

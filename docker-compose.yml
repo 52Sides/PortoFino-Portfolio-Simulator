@@ -1,97 +1,94 @@
-networks:
-  quantsim_net:
-
 services:
   backend:
+    container_name: portofino-backend
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: quantsim-backend
-    environment:
-      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/quantsim_db
     env_file:
       - .env
       - .env_secret
-    ports:
-      - "8000:8000"
+    volumes:
+      - reports-data:/tmp/reports
+    networks:
+      - portofino_net
     depends_on:
       - postgres
       - redis
       - kafka
+    ports:
+      - "8000:8000"
+    restart: always
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      test: [ "CMD-SHELL", "curl -f http://localhost:8000/health || exit 1" ]
       interval: 20s
       timeout: 20s
       retries: 20
       start_period: 80s
-    restart: always
-    networks:
-      - quantsim_net
 
   frontend:
+    container_name: portofino-frontend
     build:
       context: ./frontend
       dockerfile: Dockerfile
       args:
         VITE_API_URL: http://localhost:8000
-    container_name: quantsim-frontend
-    ports:
-      - "5173:80"
+    networks:
+      - portofino_net
     depends_on:
       - backend
+    ports:
+      - "5173:80"
     restart: always
-    networks:
-      - quantsim_net
 
   postgres:
+    container_name: portofino-postgres
     image: postgres:16
-    container_name: quantsim-postgres
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: quantsim_db
+    env_file:
+      - .env
+      - .env_secret
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - portofino_net
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 5s
       timeout: 3s
       retries: 5
-    networks:
-      - quantsim_net
 
   redis:
+    container_name: portofino-redis
     image: redis:7-alpine
-    container_name: quantsim-redis
+    networks:
+      - portofino_net
     ports:
       - "6379:6379"
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 5s
       timeout: 3s
       retries: 5
-    networks:
-      - quantsim_net
 
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.7.0
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-    ports:
-      - "2181:2181"
+  redis_exporter:
+    container_name: portofino-redis-exporter
+    image: oliver006/redis_exporter:latest
     networks:
-      - quantsim_net
+      - portofino_net
+    depends_on:
+      - redis
+    ports:
+      - "9121:9121"
+    command:
+      - '--redis.addr=redis:6379'
 
   kafka:
+    container_name: portofino-kafka
     image: confluentinc/cp-kafka:7.7.0
-    depends_on:
-      - zookeeper
-    ports:
-      - "9092:9092"
-      - "29092:29092"
+    init: true
+    env_file:
+      - .env
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -100,170 +97,188 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_CREATE_TOPICS: "simulation_requests:1:1"
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+    networks:
+      - portofino_net
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    restart: always
     healthcheck:
-      test: ["CMD", "kafka-topics", "--bootstrap-server", "kafka:9092", "--list"]
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server kafka:9092 --list > /dev/null 2>&1"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.7.0
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - portofino_net
+    ports:
+      - "22181:2181"
+    healthcheck:
+      test: [ "CMD-SHELL", "echo ruok | nc localhost 2181" ]
       interval: 10s
       timeout: 5s
       retries: 5
-    restart: always
-    networks:
-      - quantsim_net
 
   kafka-ui:
+    container_name: portofino-kafka-ui
     image: provectuslabs/kafka-ui:latest
-    ports:
-      - "8085:8080"
-    depends_on:
-      - kafka
-      - zookeeper
     environment:
-      - KAFKA_CLUSTERS_0_NAME=QuantSimCluster
+      - KAFKA_CLUSTERS_0_NAME=PortoFinoCluster
       - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092
       - KAFKA_CLUSTERS_0_ZOOKEEPER=zookeeper:2181
       - KAFKA_CLUSTERS_0_READONLY=false
-    restart: always
     networks:
-      - quantsim_net
+      - portofino_net
+    depends_on:
+      - kafka
+      - zookeeper
+    ports:
+      - "8085:8080"
+    restart: always
+
+  kafka_exporter:
+    container_name: portofino-kafka-exporter
+    image: danielqsj/kafka-exporter:latest
+    networks:
+      - portofino_net
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports:
+      - "9308:9308"
+    command:
+      - --kafka.server=kafka:9092
+      - --web.listen-address=:9308
+      - --web.telemetry-path=/metrics
+    pull_policy: never
+    restart: always
 
   worker:
+    container_name: portofino-worker
     build:
       context: ./backend
-    container_name: quantsim-worker
-    command: celery -A src.services.worker.celery_app worker --loglevel=info
     env_file:
       - .env
       - .env_secret
+    volumes:
+      - reports-data:/tmp/reports
+    networks:
+      - portofino_net
     depends_on:
       - backend
       - redis
       - kafka
+    command: celery -A services.worker.celery_app worker --pool=solo -Q workers_queue -c 1 -l info
     restart: always
     healthcheck:
-      test: [ "CMD-SHELL", "for i in {1..3}; do celery -A src.services.worker.celery_app inspect ping -d celery@$(hostname) && exit 0; sleep 5; done; exit 1" ]
+      test:  ["CMD-SHELL", "celery -A services.worker.celery_app inspect ping"]
       interval: 20s
       timeout: 10s
-      retries: 3
-    networks:
-      - quantsim_net
+      retries: 5
 
-  kafka_consumer:
+  celery_beat:
+    container_name: portofino-celery-beat
     build:
       context: ./backend
-    container_name: quantsim-kafka-consumer
-    command: python -m src.services.kafka.consumer
     env_file:
       - .env
       - .env_secret
-    depends_on:
-      - kafka
-      - backend
-      - redis
-
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: prometheus
-    volumes:
-      - prometheus_data:/prometheus
-      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-    ports:
-      - '9090:9090'
+    networks:
+      - portofino_net
     depends_on:
       - backend
       - worker
+      - kafka
+      - redis
+    command: celery -A services.worker.celery_app beat --loglevel=info
+    restart: always
 
   flower:
-    image: mher/flower
-    container_name: flower
-    command: celery --app=services.worker.celery_app:celery_app flower --port=5555 --prometheus-port=5556
+    container_name: portofino-flower
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    networks:
+      - portofino_net
+    env_file:
+      - .env
+      - .env_secret
+    depends_on:
+      - redis
+      - worker
     ports:
       - "5555:5555"
       - "5556:5556"
+    command: celery -A services.worker.celery_app:celery_app flower --port=5555 --prometheus-port=5556
+    restart: always
+
+  prometheus:
+    container_name: portofino-prometheus
+    image: prom/prometheus:latest
+    networks:
+      - portofino_net
+    volumes:
+      - prometheus_data:/prometheus
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
     depends_on:
-      - redis
+      - backend
       - worker
+    ports:
+      - '9090:9090'
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
 
   grafana:
+    container_name: portofino-grafana
     image: grafana/grafana:latest
-    volumes:
-      - grafana_data:/var/lib/grafana
-      - ./monitoring/grafana/provisioning/datasources/prometheus.yml:/etc/grafana/provisioning/datasources/prometheus.yml
-      - ./monitoring/grafana/provisioning/dashboards.yml:/etc/grafana/provisioning/dashboards.yml
-      - ./monitoring/grafana/dashboards:/etc/grafana/dashboards
-    container_name: grafana
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_USERS_ALLOW_SIGN_UP=false
       - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
-    restart: unless-stopped
-    ports:
-      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning/datasources/prometheus.yml:/etc/grafana/provisioning/datasources/prometheus.yml
+      - ./monitoring/grafana/provisioning/dashboards.yml:/etc/grafana/provisioning/dashboards.yml
+      - ./monitoring/grafana/dashboards:/etc/grafana/dashboards
     depends_on:
       - prometheus
-
-  kafka_exporter:
-    image: danielqsj/kafka_exporter:latest
-    container_name: quantsim-kafka-exporter
-    command:
-      - --kafka.server=kafka:9092
-      - --web.listen-address=:9308
-      - --web.telemetry-path=/metrics
     ports:
-      - "9308:9308"
-    depends_on:
-      - kafka
-
-  redis_exporter:
-    image: oliver006/redis_exporter:latest
-    container_name: quantsim-redis-exporter
-    command:
-      - '--redis.addr=redis:6379'
-    ports:
-      - "9121:9121"
-    depends_on:
-      - redis
+      - "3000:3000"
+    restart: unless-stopped
 
   node_exporter:
+    container_name: portofino-node-exporter
     image: prom/node-exporter:latest
-    container_name: quantsim-node-exporter
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /etc:/host/etc:ro
+    networks:
+      - portofino_net
     ports:
       - "9100:9100"
     command:
       - '--path.rootfs=/host'
     pid: "host"
-    volumes:
-      - /:/host:ro,rslave
 
-  locust:
-    image: locustio/locust
-    command: -f ./backend/tests/load/locustfile.py --host=http://backend:8000
-    volumes:
-      - ./backend/tests/load:/app/backend/tests/load
-    ports:
-      - "8089:8089"
 
-  celery_beat:
-    build:
-      context: ./backend
-    container_name: quantsim-celery-beat
-    command: celery -A src.services.worker.celery_app beat --loglevel=info
-    env_file:
-      - .env
-      - .env_secret
-    depends_on:
-      - backend
-      - worker
-      - kafka
-      - redis
-    restart: always
-    networks:
-      - quantsim_net
-
+networks:
+  portofino_net:
 
 
 volumes:
   postgres_data:
   prometheus_data:
   grafana_data:
+  reports-data:

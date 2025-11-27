@@ -1,8 +1,13 @@
-export default function MetricCard({ label, value }: { label: string; value: string | number }) {
+interface MetricCardProps {
+  label: string;
+  value: string | number;
+}
+
+export default function MetricCard({ label, value }: MetricCardProps) {
   return (
-    <div className="bg-gray-100 dark:bg-gray-700 rounded-xl p-4 shadow-sm text-center">
-      <p className="text-gray-600 dark:text-gray-300 text-sm">{label}</p>
-      <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">{value}</p>
+    <div className="bg-[var(--surface)] text-[var(--text)] rounded-xl shadow-md p-6 flex flex-col items-center justify-center transition-colors duration-300 hover:shadow-lg">
+      <p className="text-sm text-[var(--text-muted)] mb-2">{label}</p>
+      <p className="text-xl font-semibold">{value}</p>
     </div>
-  )
+  );
 }

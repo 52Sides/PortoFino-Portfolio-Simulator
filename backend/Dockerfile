@@ -14,12 +14,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     postgresql-client \
     redis-tools \
     netcat-openbsd \
+    curl \
   && rm -rf /var/lib/apt/lists/*
 
 COPY pyproject.toml ./
+COPY entrypoint.sh ./entrypoint.sh
 COPY src ./src
-COPY src/db/migrations ./src/db/migrations
-COPY entrypoint.sh /app/entrypoint.sh
 
 RUN pip install --upgrade pip && pip install -e .
 

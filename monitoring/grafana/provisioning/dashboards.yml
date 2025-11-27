@@ -1,9 +1,9 @@
 apiVersion: 1
 
 providers:
-  - name: 'QuantSim Dashboards'
+  - name: 'PortoFino Dashboards'
     orgId: 1
-    folder: 'QuantSim'
+    folder: 'PortoFino'
     type: file
     disableDeletion: false
     editable: true

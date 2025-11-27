@@ -1,35 +1,102 @@
 export type SimulationEvent =
-  | { type: "simulation.started"; job_id: string }
-  | { type: "simulation.progress"; job_id: string; progress: number }
-  | { type: "simulation.completed"; job_id: string; result_id: number }
-  | { type: "error"; message: string };
+  | {
+      task_id: string;
+      user_id: number;
+      status: "done";
+      data: {
+        cagr: number;
+        sharpe: number;
+        max_drawdown: number;
+        portfolio_value: Record<string, number>;
+      };
+    }
+  | {
+      task_id: string;
+      user_id: number;
+      status: "error";
+      message: string;
+    };
 
-type EventCallback = (event: SimulationEvent) => void;
+export type ReportEvent =
+  | {
+      task_id: string;
+      status: "done";
+      download_url: string | null;
+    }
+  | {
+      task_id: string;
+      status: "failed";
+      download_url?: string;
+    };
+
+type EventCallback<T> = (event: T) => void;
 
 /**
- * Подключение к WebSocket /ws/simulations и подписка на события.
- * Возвращает объект с методами close() и reconnect().
+ * Connect to WebSocket for simulation
  */
-export function subscribeToSimulationEvents(onEvent: EventCallback) {
+export function subscribeToSimulationWS(
+  task_id: string,
+  onEvent: EventCallback<SimulationEvent>
+) {
+  const token = localStorage.getItem("access_token");
   const WS_URL =
     import.meta.env.VITE_API_URL?.replace(/^http/, "ws") +
-    "/ws/simulations";
+    `/ws/simulations/${task_id}?token=${token}`;
 
-  let socket = new WebSocket(WS_URL);
+  const socket = new WebSocket(WS_URL);
 
-  socket.onopen = () => console.log("🔌 WebSocket connected");
+  socket.onopen = () => console.log(`Simulation WS connected: ${task_id}`);
   socket.onmessage = (msg) => {
     try {
-      const event = JSON.parse(msg.data);
+      const event = JSON.parse(msg.data) as SimulationEvent;
       onEvent(event);
+
+      // Close WS in the end
+      if (event.status === "done" || event.status === "error") {
+        socket.close();
+      }
     } catch (e) {
       console.error("Invalid WS message:", e);
     }
   };
-  socket.onclose = () => {
-    console.warn("WebSocket closed, reconnecting in 3s...");
-    setTimeout(() => subscribeToSimulationEvents(onEvent), 3000);
+
+  socket.onclose = () => console.log(`Simulation WS closed: ${task_id}`);
+
+  return {
+    close: () => socket.close(),
   };
+}
+
+/**
+ * Connect to WebSocket for report
+ */
+export function subscribeToReportWS(
+  task_id: string,
+  onEvent: EventCallback<ReportEvent>
+) {
+  const token = localStorage.getItem("access_token");
+  const WS_URL =
+    import.meta.env.VITE_API_URL?.replace(/^http/, "ws") +
+    `/ws/reports/${task_id}?token=${token}`;
+
+  const socket = new WebSocket(WS_URL);
+
+  socket.onopen = () => console.log(`Report WS connected: ${task_id}`);
+  socket.onmessage = (msg) => {
+    try {
+      const event = JSON.parse(msg.data) as ReportEvent;
+      onEvent(event);
+
+      // Close WS in the end
+      if (event.status === "done" || event.status === "failed") {
+        socket.close();
+      }
+    } catch (e) {
+      console.error("Invalid WS message:", e);
+    }
+  };
+
+  socket.onclose = () => console.log(`Report WS closed: ${task_id}`);
 
   return {
     close: () => socket.close(),

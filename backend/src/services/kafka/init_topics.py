@@ -1,49 +1,32 @@
-import asyncio
-import json
 import logging
-from pathlib import Path
+
 from aiokafka.admin import AIOKafkaAdminClient, NewTopic
+
 from core.config import settings
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
 
-TOPICS_PATH = Path(__file__).resolve().parents[3] / "kafka" / "topics_config"
+TOPICS = [
+    {"name": "simulation-events", "num_partitions": 1, "replication_factor": 1},
+    {"name": "report-events", "num_partitions": 1, "replication_factor": 1},
+]
 
 
 async def create_topics():
-    admin = AIOKafkaAdminClient(bootstrap_servers=settings.KAFKA_BROKER)
-    await admin.start()
-    logger.info("Checking Kafka topics")
+    """Create required Kafka topics if they do not already exist."""
 
+    admin = AIOKafkaAdminClient(bootstrap_servers=settings.KAFKA_BROKER)
+
+    await admin.start()
     try:
         existing = await admin.list_topics()
-        new_topics = []
+        to_create = [NewTopic(**t) for t in TOPICS if t["name"] not in existing]
 
-        for json_file in TOPICS_PATH.glob("*.json"):
-            with open(json_file, "r", encoding="utf-8") as f:
-                cfg = json.load(f)
-            name = cfg["name"]
-            if name not in existing:
-                logger.info(f"Creating topic: {name}")
-                new_topics.append(
-                    NewTopic(
-                        name=name,
-                        num_partitions=cfg.get("num_partitions", 1),
-                        replication_factor=cfg.get("replication_factor", 1),
-                    )
-                )
-
-        if new_topics:
-            await admin.create_topics(new_topics)
-            logger.info(f"Created {len(new_topics)} topics")
+        if to_create:
+            await admin.create_topics(new_topics=to_create, validate_only=False)
+            logger.info(f"Created Kafka topics: {[t.name for t in to_create]}")
         else:
-            logger.info("All topics already exist")
+            logger.info("Kafka topics already exist")
 
     finally:
         await admin.close()
-        logger.info("Kafka admin connection closed")
-
-
-if __name__ == "__main__":
-    asyncio.run(create_topics())

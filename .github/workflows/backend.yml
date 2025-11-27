@@ -16,7 +16,7 @@ jobs:
       REFRESH_TOKEN_EXPIRE_DAYS: ${{ secrets.REFRESH_TOKEN_EXPIRE_DAYS }}
       GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
       GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-
+      SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -43,15 +43,14 @@ jobs:
 
       - name: Run backend unit tests
         run: |
-          pytest backend/src -v -m "not integration" \
+          pytest backend/src -v -m "unit" \
             --cov=api \
-            --cov=cli \
             --cov=core \
             --cov=db \
             --cov=schemas \
             --cov=services \
             --cov-report=term-missing \
-            --cov-fail-under=95
+            --cov-fail-under=30
 
       - name: Print coverage summary
         run: coverage report

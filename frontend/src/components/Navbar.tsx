@@ -1,7 +1,8 @@
-import { useNavigate } from 'react-router-dom'
-import { Moon, Sun, LogOut, History } from 'lucide-react'
-import { useAuthStore } from '../store/auth'
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Moon, Sun, LogOut, History, Home } from 'lucide-react'
+import { useAuthStore } from '../store/auth'
+import api from '../api/client'
 
 interface NavbarProps {
   dark: boolean
@@ -11,61 +12,82 @@ interface NavbarProps {
 }
 
 export default function Navbar({ dark, setDark, onShowLogin, onShowSignup }: NavbarProps) {
-  const { accessToken, clear } = useAuthStore()
+  const { accessToken, refreshToken, clear } = useAuthStore()
   const navigate = useNavigate()
-  const [hover, setHover] = useState(false)
+  const [loadingLogout, setLoadingLogout] = useState(false)
+
+  const toggleTheme = () => {
+    setDark(!dark)
+    document.documentElement.classList.toggle('dark', !dark)
+  }
+
+  const handleLogout = async () => {
+    if (!accessToken) return
+    setLoadingLogout(true)
+    try {
+      if (refreshToken) await api.post('/auth/logout', { refresh_token: refreshToken })
+      clear()
+      navigate('/')
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoadingLogout(false)
+    }
+  }
+
+  const navButton =
+    "px-3 py-1.5 text-sm font-medium flex items-center gap-1 rounded-lg hover:bg-[var(--surface)] transition-colors"
 
   return (
-    <header className="w-full bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+    <header className="w-full border-b shadow-sm transition-colors bg-[var(--navbar-bg)] border-[var(--border)]">
       <div className="max-w-6xl mx-auto flex justify-between items-center py-3 px-6">
         <div
-          className="text-xl font-semibold text-blue-600 dark:text-blue-400 cursor-pointer"
+          className="text-xl font-bold cursor-pointer text-[var(--accent)] transition-colors"
           onClick={() => navigate('/')}
         >
-          QuantSim
+          PortoFino
         </div>
 
-        {/* --- Center: History --- */}
-        {accessToken && (
-          <button
-            onClick={() => navigate('/history')}
-            className="flex items-center gap-1 text-gray-700 dark:text-gray-200 hover:text-blue-600 transition text-sm font-medium"
-          >
-            <History size={16} />
-            History
+        <div className="flex items-center gap-3">
+          <button onClick={() => navigate('/')} className={navButton}>
+            <Home size={16} /> Dashboard
           </button>
-        )}
+          {accessToken && (
+            <button onClick={() => navigate('/history')} className={navButton}>
+              <History size={16} /> History
+            </button>
+          )}
+        </div>
 
-        {/* --- Right controls --- */}
         <div className="flex items-center gap-3">
           {!accessToken ? (
             <>
               <button
                 onClick={onShowLogin}
-                className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600 transition"
+                className="px-3 py-1.5 font-medium rounded-lg shadow-md disabled:opacity-50 hover:bg-[var(--accent-hover)] transition-colors text-[var(--btn-accent-text)] bg-[var(--accent)]"
               >
                 Log in
               </button>
               <button
                 onClick={onShowSignup}
-                className="px-3 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                className="px-3 py-1.5 text-sm font-medium rounded-lg bg-[var(--btn-accent)] hover:bg-[var(--btn-accent-hover)] text-[var(--text)] transition-colors"
               >
                 Sign up
               </button>
             </>
           ) : (
             <button
-              onClick={clear}
-              className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-red-500 transition"
+              onClick={handleLogout}
+              disabled={loadingLogout}
+              className={`${navButton} hover:text-red-500`}
             >
-              <LogOut size={16} />
-              Logout
+              {loadingLogout ? 'Logging out...' : <><LogOut size={16} /> Logout</>}
             </button>
           )}
 
           <button
-            onClick={() => setDark(!dark)}
-            className="ml-2 p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+            onClick={toggleTheme}
+            className="ml-2 p-2 rounded-full hover:bg-[var(--surface)] transition-colors"
           >
             {dark ? <Sun size={18} /> : <Moon size={18} />}
           </button>

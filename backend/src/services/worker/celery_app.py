@@ -1,11 +1,12 @@
-from celery import Celery
-from celery.schedules import crontab
+from kombu import Queue
+
+from celery import Celery, shared_task
 
 from core.config import settings
 
 
 celery_app = Celery(
-    "quantsim",
+    "portofino",
     broker=settings.REDIS_URL,
     backend=settings.REDIS_URL,
 )
@@ -20,19 +21,33 @@ celery_app.conf.update(
     task_time_limit=600,
 )
 
+celery_app.conf.task_queues = (
+    Queue("WORKERS_QUEUE"),
+)
 
-@celery_app.task(name="ping")
-def ping():
-    return "pong"
-
+celery_app.autodiscover_tasks([
+    "services.worker.tasks.report",
+    "services.worker.tasks.simulation",
+    "services.worker.tasks.scheduler",
+])
 
 celery_app.conf.beat_schedule = {
-    "vacuum-analyze-db-nightly": {
+    "vacuum-every-night": {
         "task": "vacuum_analyze_task",
-        "schedule": crontab(hour=3, minute=0),
+        "schedule": 60 * 60 * 24,
     },
-    "cluster-asset-prices-monthly": {
+    "cluster-monthly": {
         "task": "cluster_asset_prices_task",
-        "schedule": crontab(day_of_month=1, hour=4, minute=0),
+        "schedule": 60 * 60 * 24 * 30,
+    },
+    "cleanup-old-reports-daily": {
+        "task": "cleanup_old_report_files_task",
+        "schedule": 60 * 60 * 24,
+        "args": (7,),
     },
 }
+
+
+@shared_task(name="healthcheck")
+def healthcheck():
+    return "ok"

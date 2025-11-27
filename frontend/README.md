@@ -1,73 +1,82 @@
-# React + TypeScript + Vite
+# PortoFino Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React + TypeScript + Vite application for portfolio simulation, history tracking, and report generation.
 
-Currently, two official plugins are available:
+## Requirements
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Node.js 20+
+- npm or yarn
+- Access to backend API (set via `VITE_API_URL`)
 
-## React Compiler
+## Project Structure
+```
+src/
+api/ Axios client and WebSocket helpers
+components/ Reusable UI components (Navbar, MetricCard, forms)
+pages/ Application pages (App, HistoryPage)
+store/ Zustand auth store
+main.tsx Entry point
+index.css Tailwind CSS base
+App.css Custom app styles
+```
+## Environment Variables
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Set the backend API URL when building or running:
+```
+VITE_API_URL=http://localhost:8000
+```
+### Installation
+```
+npm install
+```
+### Development
 
-## Expanding the ESLint configuration
+Start the dev server with hot reload:
+```
+npm run dev
+```
+Open http://localhost:5173 in your browser.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Build
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+Build production-ready assets:
+```
+npm run build
+```
+Output will be in the dist/ folder.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### Docker
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Build and run frontend container:
+
+```
+docker build --build-arg VITE_API_URL=http://backend:8000 -t portofino-frontend .
+docker run -p 80:80 -p 443:443 portofino-frontend
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+#### Notes
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- Nginx serves static files and proxies /api/ requests to backend.
+- Tailwind dark mode is controlled via dark class on html element.
+- React Router SPA routing works through try_files in nginx.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Testing 
+
+#### Unit
+
 ```
+npm run test
+```
+
+#### E2E (Playwright)
+
+```
+npx playwright test
+```
+
+### This frontend handles:
+
+- Login, registration, and token management
+- Portfolio simulation with live WebSocket updates
+- Viewing historical simulations
+- Generating and downloading XLSX reports

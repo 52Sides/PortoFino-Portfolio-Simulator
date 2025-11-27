@@ -1,13 +1,76 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-@reference "tailwindcss";
+:root {
+  --bg: #f9f9f9;
+  --surface: #ffffff;
+  --text: #1a1a1a;
+  --text-muted: #666666;
+  --border: #d9d9d9;
+  --navbar-bg: #f2f2f2;
 
-@layer base {
-  body {
-    @apply bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100;
-  }
+  --accent: #ff7a00;
+  --accent-hover: #e86b00;
+  --btn-accent-bg: #ff7a00;
+  --btn-accent-hover-bg: #e86b00;
+  --btn-accent-text: #ffffff;
 
-  html, body, #root {
-    height: 100%;
-  }
+  --btn-default-bg: #f2f2f2;
+  --btn-default-hover-bg: #e0e0e0;
+  --btn-default-text: #1a1a1a;
+
+  --logo-color: #ff7a00;
+}
+
+.dark {
+  --bg: #1c1c1c;
+  --surface: #2a2a2a;
+  --text: #e5e5e5;
+  --text-muted: #b0b0b0;
+  --border: #444444;
+  --navbar-bg: #252525;
+
+  --accent: #ff7a00;
+  --accent-hover: #e86b00;
+  --btn-accent-bg: #ff7a00;
+  --btn-accent-hover-bg: #e86b00;
+  --btn-accent-text: #ffffff;
+
+  --btn-default-bg: #f2f2f2;
+  --btn-default-hover-bg: #e0e0e0;
+  --btn-default-text: #1a1a1a;
+
+  --logo-color: #ff7a00;
+}
+
+/* base styles for body */
+body {
+  @apply bg-[var(--bg)] text-[var(--text)] transition-colors duration-300;
+}
+
+/* components */
+.logo {
+  @apply h-24 p-6 duration-300;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+.card {
+  @apply p-8 bg-[var(--surface)] rounded-xl shadow-md;
+}
+.read-the-docs {
+  @apply text-gray-400;
+}
+
+/* utilities */
+@keyframes logo-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.animate-logo-spin {
+  animation: logo-spin 20s linear infinite;
 }

@@ -3,15 +3,14 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "quant-sim-automator"
-version = "0.3.0"
-description = "QuantSim Automator: modular portfolio simulation system"
+name = "portofino-portfolio-simulator"
+version = "3.0"
+description = "PortoFino Portfolio Simulator"
 authors = [{ name = "52Sides", email = "everybody.knows.1152@gmail.com" }]
 requires-python = ">=3.11"
 dependencies = [
   "pandas>=2.2",
   "numpy>=1.26",
-  "typer[all]",
   "yfinance>=0.2",
   "fastapi>=0.110",
   "uvicorn[standard]>=0.29",
@@ -37,25 +36,42 @@ dependencies = [
   "black",
   "isort",
   "sqlalchemy[asyncio]>=2.0.25",
-  "asyncpg>=0.29",
-  "alembic>=1.13",
   "aiosqlite",
-  "jose",
+  "python-jose[cryptography]",
   "passlib",
+  "pydantic[email]",
   "prometheus-fastapi-instrumentator>=6.0.0",
   "openpyxl",
-  "locust"
+  "argon2-cffi",
+  "authlib>=1.2",
+  "flower>=1.1.0",
+  "python-multipart",
+  "aiohttp",
+  "itsdangerous>=2.1.2"
 ]
 
 [tool.setuptools]
 package-dir = {"" = "src"}
-packages = ["api", "cli", "core", "db", "schemas", "services"]
+packages = ["api", "core", "db", "schemas", "services"]
+
+[tool.coverage.run]
+omit = [
+    "*/tests/*",
+    "*/__init__.py",
+    "*/conftest.py",
+    "*/migrations/*",
+    "*/venv/*",
+    "*/env/*",
+    "*/.venv/*"
+]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
-addopts = " --disable-warnings --cov=src --cov-report=term-missing"
+addopts = " --disable-warnings --cov=src --cov-branch --cov-report=term-missing"
+testpaths = ["tests"]
 markers = [
   "unit: isolated tests without external deps",
-  "integration: tests using Postgres, Redis, Kafka, Alembic, or API",
-  "celery: tests for asynchronous Celery task execution and worker integration"
+  "integration: tests using Postgres, Redis, Kafka, or API",
+  "e2e: tests for pipelines"
 ]
+
