@@ -69,16 +69,20 @@ jobs:
           done
 
       # ---------------- Wait frontend ----------------
-      - name: Wait for frontend
+      - name: Wait for frontend fully loaded
         run: |
-          for i in {1..20}; do
-            if curl -s http://localhost:5173/ > /dev/null; then
-              echo "Frontend ready"
+          for i in {1..30}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5173/)
+            if [ "$STATUS" = "200" ]; then
+              echo "Frontend HTML ready"
               break
             fi
-            echo "Waiting for frontend"
+            echo "Waiting for frontend HTML ($i/30)"
             sleep 5
           done
+
+          echo "Waiting for React JS to initialize..."
+          sleep 10
 
       # ---------------- Backend tests ----------------
       - name: Run backend tests

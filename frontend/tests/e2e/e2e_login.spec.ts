@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 
 test('user can log in and see History button', async ({ page }) => {
-  await page.goto("http://localhost:5173/");
+  await page.goto("http://localhost:5173/", { timeout: 30000 });
   await page.click("text=Sign up");
   await page.fill('input[name="email"]', "user@test.com");
   await page.fill('input[name="password"]', "pass123");

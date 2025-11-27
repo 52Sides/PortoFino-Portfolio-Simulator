@@ -3,7 +3,7 @@ import fs from 'fs'
 
 test('download XLSX report', async ({ page, context: _context }) => {
   // Main page
-  await page.goto('http://localhost:5173/')
+  await page.goto("http://localhost:5173/", { timeout: 30000 });
 
   // Login
   await page.getByText('Log in').click()
