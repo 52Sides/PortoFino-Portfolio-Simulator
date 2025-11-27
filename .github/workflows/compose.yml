@@ -10,9 +10,11 @@ jobs:
   docker_compose_tests:
     runs-on: ubuntu-latest
     steps:
+      # --- Checkout ---
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # --- Create CI secrets env ---
       - name: Create .env_secret for CI
         run: |
           cat <<EOF > .env_secret
@@ -25,16 +27,19 @@ jobs:
           SESSION_SECRET=${{ secrets.SESSION_SECRET }}
           EOF
 
+      # --- Docker build setup ---
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build all services (no cache)
+      # --- Build all services without cache ---
+      - name: Build all services
         run: docker compose build --no-cache
 
-      # Infrastructure
-      - name: Start infrastructure (Postgres, Redis, ZooKeeper, Kafka, Prometheus)
+      # --- Start infrastructure containers ---
+      - name: Start infrastructure
         run: docker compose up -d postgres redis zookeeper kafka prometheus
 
+      # --- Wait for healthy infrastructure ---
       - name: Wait for healthy state
         run: |
           for i in {1..25}; do
@@ -48,11 +53,12 @@ jobs:
             sleep 15
           done
 
-      # Main services
-      - name: Start backend + worker + frontend + grafana
+      # --- Start main services ---
+      - name: Start backend, worker, frontend, grafana
         run: docker compose up -d backend worker frontend grafana
 
-      - name: Wait for backend readiness
+      # --- Wait for backend readiness ---
+      - name: Wait for backend
         run: |
           for i in {1..20}; do
             if curl -s http://localhost:8000/health > /dev/null; then
@@ -63,7 +69,19 @@ jobs:
             sleep 5
           done
 
-      # Checking Prometheus and Grafana
+      # --- Wait for frontend readiness ---
+      - name: Wait for frontend
+        run: |
+          for i in {1..20}; do
+            if curl -s http://localhost:5173/ > /dev/null; then
+              echo "Frontend ready"
+              break
+            fi
+            echo "Waiting for frontend"
+            sleep 5
+          done
+
+      # --- Optional: wait for Prometheus, Grafana, Redis Exporter ---
       - name: Wait for Prometheus
         run: |
           for i in {1..20}; do
@@ -97,18 +115,18 @@ jobs:
             sleep 5
           done
 
-      # Tests
+      # --- Run backend integration tests ---
       - name: Run backend integration tests
         run: |
-          echo "Running integration pytest suite"
           docker compose exec backend pytest -v -m "integration or e2e" --disable-warnings --cov=src --cov-report=term-missing
 
-      - name: Run Playwright realtime E2E test
+      # --- Run frontend e2e tests ---
+      - name: Run Playwright E2E tests
         run: |
-          docker compose exec frontend npm install -D @playwright/test
           docker compose exec frontend npx playwright install --with-deps
-          docker compose exec frontend npx playwright test tests/e2e/simulation-realtime.spec.ts --project=chromium --reporter=line
+          docker compose exec frontend npm run test:e2e
 
+      # --- Upload Playwright report ---
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v4
@@ -116,12 +134,12 @@ jobs:
           name: playwright-report
           path: frontend/playwright-report/
 
-      # Diagnostic
+      # --- Diagnostics on failure ---
       - name: Show docker logs on failure
         if: failure()
         run: docker compose logs backend worker kafka frontend prometheus grafana
 
-      # Clear
+      # --- Tear down ---
       - name: Tear down environment
         if: always()
         run: docker compose down --remove-orphans -v
