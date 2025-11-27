@@ -38,17 +38,20 @@ jobs:
       - name: Lint frontend
         run: npm run lint || echo "Lint warnings ignored"
 
+      - name: Create env file for build
+        run: echo "VITE_API_URL=http://localhost:8000" > .env
+
       - name: Run unit tests
         run: npm run test -- tests/unit
 
       - name: Run integration tests
         run: npm run test -- tests/integration
 
+      - name: Install Playwright browsers
+        run: npx playwright install
+
       - name: Run e2e tests
         run: npm run test:e2e
-
-      - name: Create env file for build
-        run: echo "VITE_API_URL=http://localhost:8000" > .env
 
       - name: Build project
         run: npm run build

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { subscribeToSimulationWS } from "@/api/events";
 import type { SimulationEvent } from "@/api/events";
-import type { AxiosError } from 'axios';
+import { AxiosError } from 'axios';
 import Plot from "react-plotly.js";
 import api from "./api/client";
 import MetricCard from "./components/MetricCard";
