@@ -1,30 +1,40 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from '@playwright/test';
+
+async function closeModalIfExists(page) {
+  const modalOverlay = page.locator('div.fixed.inset-0');
+  if (await modalOverlay.isVisible().catch(() => false)) {
+    const cancel = page.getByText('Cancel', { exact: true });
+    if (await cancel.isVisible().catch(() => false)) {
+      await cancel.click();
+      await page.waitForTimeout(200);
+    }
+  }
+}
 
 test('user can sign up, log in, see Logout, then log out', async ({ page }) => {
   await page.goto("http://localhost:5173/", { timeout: 30000 });
 
-  // Sign up
+  await closeModalIfExists(page);
+
+  await closeModalIfExists(page);
   await page.click("text=Sign up");
+
   await page.getByPlaceholder("Email").fill("user@test.com");
   await page.getByPlaceholder("Password").fill("pass123");
+
+  await closeModalIfExists(page);
   await page.click("text=Sign up");
 
-  // if form
-  const cancelBtn = page.getByText('Cancel');
-  if (await cancelBtn.isVisible().catch(() => false)) {
-    await cancelBtn.click();
-  }
-
-  // Log in
+  await closeModalIfExists(page);
   await page.click("text=Log in");
+
   await page.getByPlaceholder("Email").fill("user@test.com");
   await page.getByPlaceholder("Password").fill("pass123");
+
+  await closeModalIfExists(page);
   await page.click("text=Login");
 
-  // if form
-  if (await cancelBtn.isVisible().catch(() => false)) {
-    await cancelBtn.click();
-  }
+  await closeModalIfExists(page);
 
   await expect(page.getByText('Logout')).toBeVisible();
 
