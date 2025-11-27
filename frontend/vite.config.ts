@@ -4,9 +4,7 @@ import path from 'path';
 
 export default defineConfig({
   plugins: [
-    react({
-      jsxInject: `import React from 'react'`
-    })
+    react()
   ],
   resolve: {
     alias: { '@': path.resolve(__dirname, './src') }

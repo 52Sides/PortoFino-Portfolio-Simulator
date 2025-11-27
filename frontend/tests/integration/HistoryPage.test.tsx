@@ -1,11 +1,13 @@
+import React from 'react'
 import { render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import HistoryPage from '../../src/pages/HistoryPage'
 import api from '../../src/api/client'
 import { useAuthStore } from '../../src/store/auth'
-import { vi } from 'vitest'
+import { vi, MockedFunction } from 'vitest'
 
 vi.mock('../../src/api/client')
+const mockedApiGet = api.get as MockedFunction<typeof api.get>
 
 describe('HistoryPage', () => {
   beforeEach(() => {
@@ -13,7 +15,7 @@ describe('HistoryPage', () => {
   })
 
   it('renders empty state if no simulations', async () => {
-    vi.mocked(api.get).mockResolvedValueOnce({ data: { root: [], total: 0 } })
+    mockedApiGet.mockResolvedValueOnce({ data: { root: [], total: 0 } })
 
     render(
       <MemoryRouter>
@@ -27,7 +29,7 @@ describe('HistoryPage', () => {
   })
 
   it('renders simulation rows correctly', async () => {
-    vi.mocked(api.get).mockResolvedValueOnce({
+    mockedApiGet.mockResolvedValueOnce({
       data: {
         root: [
           {
@@ -52,8 +54,8 @@ describe('HistoryPage', () => {
 
     await waitFor(() => {
       expect(screen.getByText('TSLA-L')).toBeInTheDocument()
-      expect(screen.getByTitle('View Details')).toBeInTheDocument()
-      expect(screen.getByTitle('Download Report')).toBeInTheDocument()
+      expect(screen.getByText('View')).toBeInTheDocument()
+      expect(screen.getByText('Download')).toBeInTheDocument()
     })
   })
 })
