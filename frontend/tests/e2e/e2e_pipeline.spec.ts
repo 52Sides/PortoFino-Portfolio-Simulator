@@ -21,17 +21,12 @@ test('login → simulate → history → report pipeline', async ({ page }) => {
 
   await page.getByPlaceholder("Email").fill("user@test.com");
   await page.getByPlaceholder("Password").fill("pass123");
-
-  await closeModalIfExists(page);
   await page.click("text=Login");
-
-  await closeModalIfExists(page);
 
   await expect(page.getByText('Logout')).toBeVisible();
 
   await page.fill("textarea", "AAPL-L-100% 2020-01-01 2020-12-31");
   await page.click("text=Simulate");
-
   await page.locator('text=Sharpe Ratio').waitFor({ timeout: 20000 });
 
   await page.getByText('History').click();
