@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import api, { AxiosError } from '../api/client'
+import type { AxiosError } from 'axios'
 
 interface AuthState {
   accessToken: string | null
