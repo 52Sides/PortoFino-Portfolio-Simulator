@@ -84,7 +84,7 @@ export default function SignUpForm({ onClose }: { onClose: () => void }) {
 
         <button
           type="submit"
-          data-testid="login-submit"
+          data-testid="signup-submit"
           disabled={loading}
           className="mt-4 w-full py-3 font-medium rounded-lg shadow-md disabled:opacity-50 hover:bg-[var(--accent-hover)] transition-colors text-[var(--btn-accent-text)] bg-[var(--accent)]"
         >
