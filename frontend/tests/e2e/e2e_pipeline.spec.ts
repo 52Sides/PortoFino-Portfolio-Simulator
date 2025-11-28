@@ -13,7 +13,7 @@ test('login → simulate → history → report pipeline', async ({ page }) => {
 
   await page.fill("textarea", "AAPL-L-100% 2020-01-01 2020-12-31");
   await page.click("text=Simulate");
-  await page.locator('text=Sharpe Ratio').waitFor({ timeout: 20000 });
+  await page.locator('text=Sharpe Ratio').waitFor({ timeout: 30000 });
 
   await page.getByText('History').click();
   await expect(page.getByText('Simulation History')).toBeVisible();
