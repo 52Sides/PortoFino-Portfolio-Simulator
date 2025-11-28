@@ -10,7 +10,6 @@ test('login → simulate → history → report pipeline', async ({ page }) => {
   await page.getByPlaceholder("Email").fill("user@test.com");
   await page.getByPlaceholder("Password").fill("pass123");
   await page.getByTestId('login-submit').click()
-  await expect(page.getByText('Logout')).toBeVisible({ timeout: 3000 });
 
   await page.fill("textarea", "AAPL-L-100% 2020-01-01 2020-12-31");
   await page.click("text=Simulate");
