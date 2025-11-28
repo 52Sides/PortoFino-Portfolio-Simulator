@@ -27,7 +27,6 @@ test('login → simulate → history → report pipeline', async ({ page }) => {
   // View → Close
   await page.getByText('View').first().click();
   await expect(page.getByText('Close')).toBeVisible();
-  await closeModalIfExists(page); // закрытие вручную
 
   // Download
   const [download] = await Promise.all([
