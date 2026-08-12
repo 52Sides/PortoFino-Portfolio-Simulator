@@ -3,13 +3,17 @@ import { test, expect } from '@playwright/test';
 test('login → simulate → history → report pipeline', async ({ page }) => {
   await page.goto("http://localhost:5173/", { timeout: 30000 });
 
-  // Login
-  await page.click("text=Log in");
+  const email = `pipeline-${Date.now()}@test.com`;
+
+  // Sign up
+  await page.click("text=Sign up");
   await expect(page.getByText('Cancel')).toBeVisible();
 
-  await page.getByPlaceholder("Email").fill("user@test.com");
+  await page.getByPlaceholder("Email").fill(email);
   await page.getByPlaceholder("Password").fill("pass123");
-  await page.getByTestId('login-submit').click()
+  await page.getByTestId('signup-submit').click()
+  await expect(page.getByText('Logout')).toBeVisible({ timeout: 5000 });
+  await expect(page.getByText('Cancel')).not.toBeVisible();
 
   await page.fill("textarea", "AAPL-L-100% 2020-01-01 2020-12-31");
   await page.click("text=Simulate");
