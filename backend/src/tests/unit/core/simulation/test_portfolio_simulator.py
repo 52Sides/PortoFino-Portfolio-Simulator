@@ -3,7 +3,7 @@ import pandas as pd
 from datetime import date
 
 from core.simulation.portfolio_simulator import PortfolioSimulator
-from schemas.simulation import ParsedCommandModel
+from api.schemas import ParsedCommandModel
 from db.models.simulation_model import SimulationModel
 
 

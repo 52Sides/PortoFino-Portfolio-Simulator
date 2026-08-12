@@ -2,7 +2,7 @@ from fastapi import HTTPException
 
 from db.database import AsyncSessionLocal
 from db.repositories.history_repo import SimHistoryRepo
-from schemas.history import SimHistoryDetail, SimHistoryMetrics, PaginatedSimHistoryList
+from api.schemas.history import SimHistoryDetail, SimHistoryMetrics, PaginatedSimHistoryList
 
 
 class HistoryService:

@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import List
 import re
 
-from schemas.simulation import ParsedCommandModel
+from api.schemas import ParsedCommandModel
 
 MAX_POSITIONS = 10
 MAX_CMD_LENGTH = 500

@@ -105,7 +105,7 @@ export default function LoginForm({ onClose }: { onClose: () => void }) {
         </button>
 
         <a
-          href={`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/auth/google/login`}
+          href={`${import.meta.env.VITE_API_URL || '/api'}/auth/google/login`}
           className="w-full mt-4 py-3 text-center border border-[var(--border)] rounded-lg hover:bg-[var(--btn-default-hover)] transition-colors"
         >
           Continue with Google

@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 
 from api.dependencies.users import get_current_user
+from api.schemas import SimulateRequest, SimulateResponse
 from core.simulation.simulation_service import SimulationService
 from db.models.user_model import UserModel
-from schemas.simulation import SimulateRequest, SimulateResponse
 
 router = APIRouter(prefix="/simulate", tags=["Simulation"])
 

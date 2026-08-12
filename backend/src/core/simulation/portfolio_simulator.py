@@ -3,7 +3,7 @@ from __future__ import annotations
 import math
 import pandas as pd
 
-from schemas.simulation import ParsedCommandModel
+from api.schemas import ParsedCommandModel
 from db.models import SimulationModel
 
 
