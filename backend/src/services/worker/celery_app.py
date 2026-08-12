@@ -22,7 +22,7 @@ celery_app.conf.update(
 )
 
 celery_app.conf.task_queues = (
-    Queue("WORKERS_QUEUE"),
+    Queue("workers_queue"),
 )
 
 celery_app.autodiscover_tasks([

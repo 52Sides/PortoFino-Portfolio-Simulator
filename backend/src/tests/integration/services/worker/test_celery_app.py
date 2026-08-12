@@ -55,7 +55,7 @@ def test_celery_configuration_values():
     assert celery_app.conf.task_time_limit == 600
     assert celery_app.conf.broker_connection_retry_on_startup is True
 
-    assert "WORKERS_QUEUE" in celery_app.amqp.queues
+    assert "workers_queue" in celery_app.amqp.queues
 
 
 @pytest.mark.integration
