@@ -2,9 +2,9 @@ name: Docker Compose CI
 
 on:
   push:
-    branches: [ main, master, developing, update ]
+    branches: [ main, master ]
   pull_request:
-    branches: [ main, master, developing ]
+    branches: [ main, master ]
 
 jobs:
   docker_compose_tests:
