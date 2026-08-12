@@ -98,6 +98,23 @@ jobs:
       - name: Run backend tests
         run: docker compose exec backend pytest --disable-warnings --cov=src --cov-report=term-missing
 
+      # ---------------- Seed E2E market data ----------------
+      - name: Seed market data for E2E tests
+        run: |
+          docker compose exec -T postgres psql -U postgres -d portofino_db <<'SQL'
+          INSERT INTO assets (ticker, date, open, high, low, close, volume)
+          SELECT
+            'AAPL',
+            d::date,
+            100 + n,
+            101 + n,
+            99 + n,
+            100 + n,
+            1000000
+          FROM generate_series('2020-01-01'::date, '2020-12-31'::date, interval '1 day') WITH ORDINALITY AS t(d, n)
+          ON CONFLICT (ticker, date) DO NOTHING;
+          SQL
+
       # ---------------- Install Node + Playwright locally ----------------
       - name: Install Node.js
         uses: actions/setup-node@v4
