@@ -52,7 +52,7 @@ dependencies = [
 
 [tool.setuptools]
 package-dir = {"" = "src"}
-packages = ["api", "core", "db", "schemas", "services"]
+packages = ["api", "api.schemas", "core", "db", "services"]
 
 [tool.coverage.run]
 omit = [

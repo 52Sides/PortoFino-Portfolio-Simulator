@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 
 from api.dependencies.users import get_current_user
+from api.schemas.report import ReportRequest, ReportResponse
 from core.report.report_service import ReportService
 from db.models.user_model import UserModel
-from schemas.report import ReportRequest, ReportResponse
 
 router = APIRouter(prefix="/report", tags=["Report"])
 

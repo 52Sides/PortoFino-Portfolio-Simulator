@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 from fastapi import HTTPException
 
 from core.history.history_service import HistoryService
-from schemas.history import SimHistoryDetail, PaginatedSimHistoryList
+from api.schemas.history import SimHistoryDetail, PaginatedSimHistoryList
 
 
 @pytest.mark.unit

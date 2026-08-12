@@ -5,7 +5,7 @@ from io import StringIO
 import pandas as pd
 
 from core.simulation.portfolio_simulator import PortfolioSimulator
-from schemas.simulation import ParsedCommandModel, SimulateResponseWS
+from api.schemas import ParsedCommandModel, SimulateResponseWS
 from services.worker.celery_app import celery_app
 from services.worker.sync_clients.redis_pubsub import get_pubsub
 from services.worker.sync_clients.database import get_sync_db

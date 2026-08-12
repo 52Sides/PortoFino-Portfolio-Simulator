@@ -7,7 +7,7 @@ from api.main import app
 from api.dependencies.users import get_current_user
 from core.history.history_service import HistoryService
 from db.models.user_model import UserModel
-from schemas.history import SimHistoryMetrics, PaginatedSimHistoryList, SimHistoryDetail
+from api.schemas.history import SimHistoryMetrics, PaginatedSimHistoryList, SimHistoryDetail
 
 FULL_SIM_DATA = {
     "id": 101,

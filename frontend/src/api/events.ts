@@ -31,6 +31,17 @@ export type ReportEvent =
 
 type EventCallback<T> = (event: T) => void;
 
+const getWebSocketUrl = (path: string) => {
+  const apiUrl = import.meta.env.VITE_API_URL || "/api";
+
+  if (apiUrl.startsWith("http")) {
+    return `${apiUrl.replace(/^http/, "ws")}${path}`;
+  }
+
+  const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+  return `${protocol}://${window.location.host}${apiUrl}${path}`;
+};
+
 /**
  * Connect to WebSocket for simulation
  */
@@ -39,9 +50,9 @@ export function subscribeToSimulationWS(
   onEvent: EventCallback<SimulationEvent>
 ) {
   const token = localStorage.getItem("access_token");
-  const WS_URL =
-    import.meta.env.VITE_API_URL?.replace(/^http/, "ws") +
-    `/ws/simulations/${task_id}?token=${token}`;
+  const WS_URL = getWebSocketUrl(
+    `/ws/simulations/${task_id}?token=${token}`
+  );
 
   const socket = new WebSocket(WS_URL);
 
@@ -75,9 +86,7 @@ export function subscribeToReportWS(
   onEvent: EventCallback<ReportEvent>
 ) {
   const token = localStorage.getItem("access_token");
-  const WS_URL =
-    import.meta.env.VITE_API_URL?.replace(/^http/, "ws") +
-    `/ws/reports/${task_id}?token=${token}`;
+  const WS_URL = getWebSocketUrl(`/ws/reports/${task_id}?token=${token}`);
 
   const socket = new WebSocket(WS_URL);
 

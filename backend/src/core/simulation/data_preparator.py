@@ -10,7 +10,7 @@ from sqlalchemy.dialects.postgresql import insert
 from core.simulation.yfinance_fetcher import normalize_yfinance_df, fetch_yf_data_async
 from db.models import AssetsModel
 from db.repositories.assets_repo import AssetsRepo
-from schemas.simulation import ParsedCommandModel
+from api.schemas import ParsedCommandModel
 
 logger = logging.getLogger(__name__)
 

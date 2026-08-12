@@ -4,7 +4,7 @@ from datetime import date
 from unittest.mock import AsyncMock, MagicMock
 
 from core.simulation.data_preparator import DataPreparator
-from schemas.simulation import ParsedCommandModel
+from api.schemas import ParsedCommandModel
 
 
 @pytest.fixture

@@ -5,7 +5,7 @@ from fastapi import HTTPException
 
 from db.database import AsyncSessionLocal
 from db.repositories.history_repo import SimHistoryRepo
-from schemas.report import ReportResponse
+from api.schemas.report import ReportResponse
 from services.kafka.producer import producer
 from services.redis.client import redis_client
 

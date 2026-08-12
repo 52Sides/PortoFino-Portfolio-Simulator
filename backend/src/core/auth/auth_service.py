@@ -3,7 +3,7 @@ from sqlalchemy.future import select
 
 from core.auth.utils import hash_password, verify_password, create_access_token, create_refresh_token
 from db.models.user_model import UserModel
-from schemas.auth import RegisterSchema, LoginSchema, TokenResponse
+from api.schemas.auth import RegisterSchema, LoginSchema, TokenResponse
 
 
 class AuthService:

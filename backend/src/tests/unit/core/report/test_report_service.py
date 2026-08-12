@@ -10,7 +10,7 @@ from api.dependencies.users import get_current_user
 from core.report.report_service import ReportService, dict_to_list
 from db.models.user_model import UserModel
 from db.models.simulation_model import SimulationModel
-from schemas.report import ReportResponse
+from api.schemas.report import ReportResponse
 
 
 @pytest.fixture

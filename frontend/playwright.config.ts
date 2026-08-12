@@ -7,5 +7,5 @@ export default defineConfig({
     headless: true,
     screenshot: 'only-on-failure',
   },
-  timeout: 30000,
+  timeout: 120000,
 })

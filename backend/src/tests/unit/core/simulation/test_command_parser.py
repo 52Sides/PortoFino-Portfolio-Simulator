@@ -2,7 +2,7 @@ import pytest
 from datetime import date
 
 from core.simulation.command_parser import safe_command_parse, CommandValidationError
-from schemas.simulation import ParsedCommandModel
+from api.schemas import ParsedCommandModel
 
 
 @pytest.mark.unit

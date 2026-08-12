@@ -3,7 +3,7 @@ from uuid import uuid4
 from core.simulation.command_parser import safe_command_parse, CommandValidationError
 from core.simulation.data_preparator import DataPreparator
 from db.database import AsyncSessionLocal
-from schemas.simulation import SimulateResponse
+from api.schemas import SimulateResponse
 from services.kafka.producer import producer
 from services.redis.client import redis_client
 

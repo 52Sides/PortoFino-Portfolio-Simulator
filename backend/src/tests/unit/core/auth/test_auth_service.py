@@ -6,7 +6,7 @@ from fastapi import HTTPException
 from unittest.mock import AsyncMock, MagicMock
 
 from core.auth.auth_service import AuthService
-from schemas.auth import RegisterSchema, LoginSchema, TokenResponse
+from api.schemas.auth import RegisterSchema, LoginSchema, TokenResponse
 
 
 @pytest.mark.unit

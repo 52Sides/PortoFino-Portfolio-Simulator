@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, Query, HTTPException
 
 from api.dependencies.users import get_current_user
+from api.schemas.history import SimHistoryDetail, PaginatedSimHistoryList
 from core.history.history_service import HistoryService
 from db.models.user_model import UserModel
-from schemas.history import SimHistoryDetail, PaginatedSimHistoryList
 
 router = APIRouter(prefix="/history", tags=["History"])
 

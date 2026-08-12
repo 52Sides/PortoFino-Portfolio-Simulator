@@ -7,7 +7,7 @@ from api.main import app
 from api.dependencies.users import get_current_user
 from core.simulation.simulation_service import SimulationService
 from db.models.user_model import UserModel
-from schemas.simulation import SimulateResponse
+from api.schemas import SimulateResponse
 
 
 @pytest.fixture
