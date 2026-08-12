@@ -2,9 +2,9 @@ name: Docker Compose CI
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main, master, developing, update ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ main, master, developing ]
 
 jobs:
   docker_compose_tests:
@@ -19,13 +19,11 @@ jobs:
       - name: Create .env_secret for CI
         run: |
           cat <<EOF > .env_secret
-          SECRET_KEY=${{ secrets.SECRET_KEY }}
-          JWT_ALGORITHM=${{ secrets.JWT_ALGORITHM }}
-          ACCESS_TOKEN_EXPIRE_MINUTES=${{ secrets.ACCESS_TOKEN_EXPIRE_MINUTES }}
-          REFRESH_TOKEN_EXPIRE_DAYS=${{ secrets.REFRESH_TOKEN_EXPIRE_DAYS }}
-          GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
-          GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
-          SESSION_SECRET=${{ secrets.SESSION_SECRET }}
+          SECRET_KEY=ci-secret-key
+          JWT_ALGORITHM=HS256
+          ACCESS_TOKEN_EXPIRE_MINUTES=30
+          REFRESH_TOKEN_EXPIRE_DAYS=7
+          SESSION_SECRET=ci-session-secret
           EOF
 
       # ---------------- Docker Buildx ----------------
