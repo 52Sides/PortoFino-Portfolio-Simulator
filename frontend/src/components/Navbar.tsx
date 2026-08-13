@@ -36,41 +36,43 @@ export default function Navbar({ dark, setDark, onShowLogin, onShowSignup }: Nav
   }
 
   const navButton =
-    "px-3 py-1.5 text-sm font-medium flex items-center gap-1 rounded-lg hover:bg-[var(--surface)] transition-colors"
+    "px-2 py-1.5 sm:px-3 text-sm font-medium flex items-center gap-1 rounded-lg hover:bg-[var(--surface)] transition-colors whitespace-nowrap"
 
   return (
     <header className="w-full border-b shadow-sm transition-colors bg-[var(--navbar-bg)] border-[var(--border)]">
-      <div className="max-w-6xl mx-auto flex justify-between items-center py-3 px-6">
+      <div className="max-w-6xl mx-auto flex justify-between items-center gap-2 py-3 px-3 sm:px-6">
         <div
-          className="text-xl font-bold cursor-pointer text-[var(--accent)] transition-colors"
+          className="text-lg sm:text-xl font-bold cursor-pointer text-[var(--accent)] transition-colors whitespace-nowrap"
           onClick={() => navigate('/')}
         >
           PortoFino
         </div>
 
-        <div className="flex items-center gap-3">
-          <button onClick={() => navigate('/')} className={navButton}>
-            <Home size={16} /> Dashboard
+        <div className="flex items-center gap-1 sm:gap-3">
+          <button onClick={() => navigate('/')} className={navButton} aria-label="Dashboard">
+            <Home size={16} />
+            <span className="hidden sm:inline">Dashboard</span>
           </button>
           {accessToken && (
-            <button onClick={() => navigate('/history')} className={navButton}>
-              <History size={16} /> History
+            <button onClick={() => navigate('/history')} className={navButton} aria-label="History">
+              <History size={16} />
+              <span className="hidden sm:inline">History</span>
             </button>
           )}
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1 sm:gap-3">
           {!accessToken ? (
             <>
               <button
                 onClick={onShowLogin}
-                className="px-3 py-1.5 font-medium rounded-lg shadow-md disabled:opacity-50 hover:bg-[var(--accent-hover)] transition-colors text-[var(--btn-accent-text)] bg-[var(--accent)]"
+                className="px-2.5 py-1.5 sm:px-3 text-sm font-medium rounded-lg shadow-md disabled:opacity-50 hover:bg-[var(--accent-hover)] transition-colors text-[var(--btn-accent-text)] bg-[var(--accent)] whitespace-nowrap"
               >
                 Log in
               </button>
               <button
                 onClick={onShowSignup}
-                className="px-3 py-1.5 text-sm font-medium rounded-lg bg-[var(--btn-accent)] hover:bg-[var(--btn-accent-hover)] text-[var(--text)] transition-colors"
+                className="px-2.5 py-1.5 sm:px-3 text-sm font-medium rounded-lg bg-[var(--btn-accent)] hover:bg-[var(--btn-accent-hover)] text-[var(--text)] transition-colors whitespace-nowrap"
               >
                 Sign up
               </button>
@@ -87,7 +89,8 @@ export default function Navbar({ dark, setDark, onShowLogin, onShowSignup }: Nav
 
           <button
             onClick={toggleTheme}
-            className="ml-2 p-2 rounded-full hover:bg-[var(--surface)] transition-colors"
+            className="p-2 rounded-full hover:bg-[var(--surface)] transition-colors shrink-0"
+            aria-label="Toggle theme"
           >
             {dark ? <Sun size={18} /> : <Moon size={18} />}
           </button>

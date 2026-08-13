@@ -85,13 +85,22 @@ function App() {
         <p className="text-center text-[var(--text-muted)] mb-6">
           Fast portfolio simulation web platform
         </p>
+        <div className="mb-4 rounded-lg border border-[var(--border)] bg-[var(--bg)] px-4 py-3 text-sm text-[var(--text-muted)]">
+          <p className="font-medium text-[var(--text)]">Command format</p>
+          <p className="mt-1">
+            Example: <span className="font-mono text-[var(--text)]">TSLA-L-20% AAPL-S-80% 2020-01-01 2021-01-01</span>
+          </p>
+          <p className="mt-1">
+            Use up to 10 tickers. Position is <span className="font-mono">L</span> for long or <span className="font-mono">S</span> for short. Sum of weights must be 100%.
+          </p>
+        </div>
 
         <textarea
           value={command}
           onChange={(e) => setCommand(e.target.value)}
           className="w-full border border-[var(--border)] rounded-lg p-3 text-sm text-[var(--text)] bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] transition"
           rows={3}
-          placeholder="Example: 'TSLA-L-20% AAPL-S-80% 2020-01-01 2021-01-01'. Up to 10 tickers, sum of weights must be 100%"
+          placeholder="Enter a portfolio command"
           disabled={loading}
         />
 
