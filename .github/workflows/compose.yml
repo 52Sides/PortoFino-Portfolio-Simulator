@@ -1,8 +1,6 @@
 name: Docker Compose CI
 
 on:
-  push:
-    branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
 
@@ -35,7 +33,7 @@ jobs:
 
       # ---------------- Start infra ----------------
       - name: Start infrastructure
-        run: docker compose up -d postgres redis zookeeper kafka prometheus
+        run: docker compose up -d postgres redis zookeeper kafka
 
       - name: Wait for healthy state
         run: |
@@ -51,8 +49,8 @@ jobs:
           done
 
       # ---------------- Start app services ----------------
-      - name: Start backend, worker, frontend, grafana
-        run: docker compose up -d backend worker frontend grafana
+      - name: Start backend, worker, frontend
+        run: docker compose up -d backend worker frontend
 
       # ---------------- Wait backend ----------------
       - name: Wait for backend
@@ -114,6 +112,8 @@ jobs:
           FROM generate_series('2020-01-01'::date, '2020-12-31'::date, interval '1 day') WITH ORDINALITY AS t(d, n)
           ON CONFLICT (ticker, date) DO NOTHING;
           SQL
+          docker compose exec -T postgres psql -U postgres -d portofino_db -c "SELECT ticker, COUNT(*) FROM assets WHERE ticker = 'AAPL' GROUP BY ticker;"
+          docker compose exec -T worker celery -A services.worker.celery_app inspect active_queues
 
       # ---------------- Install Node + Playwright locally ----------------
       - name: Install Node.js
@@ -145,7 +145,7 @@ jobs:
       # ---------------- Diagnostics ----------------
       - name: Show docker logs on failure
         if: failure()
-        run: docker compose logs backend worker kafka frontend prometheus grafana
+        run: docker compose logs backend worker kafka frontend postgres redis
 
       # ---------------- Tear down ----------------
       - name: Tear down environment

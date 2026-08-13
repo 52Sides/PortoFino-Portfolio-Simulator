@@ -16,7 +16,14 @@ test('login → simulate → history → report pipeline', async ({ page }) => {
   await expect(page.getByText('Cancel')).not.toBeVisible();
 
   await page.fill("textarea", "AAPL-L-100% 2020-01-01 2020-12-31");
+  const simulateResponsePromise = page.waitForResponse(
+    (response) => response.url().includes('/api/simulate/') && response.request().method() === 'POST',
+    { timeout: 30000 }
+  );
   await page.click("text=Simulate");
+  const simulateResponse = await simulateResponsePromise;
+  expect(simulateResponse.ok()).toBeTruthy();
+
   await expect(
     page
       .locator('text=Sharpe Ratio')
