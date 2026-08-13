@@ -114,6 +114,8 @@ jobs:
           FROM generate_series('2020-01-01'::date, '2020-12-31'::date, interval '1 day') WITH ORDINALITY AS t(d, n)
           ON CONFLICT (ticker, date) DO NOTHING;
           SQL
+          docker compose exec -T postgres psql -U postgres -d portofino_db -c "SELECT ticker, COUNT(*) FROM assets WHERE ticker = 'AAPL' GROUP BY ticker;"
+          docker compose exec -T worker celery -A services.worker.celery_app inspect active_queues
 
       # ---------------- Install Node + Playwright locally ----------------
       - name: Install Node.js
