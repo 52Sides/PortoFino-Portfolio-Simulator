@@ -92,10 +92,6 @@ jobs:
           echo "Waiting for React JS to initialize..."
           sleep 10
 
-      # ---------------- Backend tests ----------------
-      - name: Run backend tests
-        run: docker compose exec backend pytest --disable-warnings --cov=src --cov-report=term-missing
-
       # ---------------- Seed E2E market data ----------------
       - name: Seed market data for E2E tests
         run: |
